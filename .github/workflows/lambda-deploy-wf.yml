@@ -1,0 +1,30 @@
+name: Lambda Deployment Workflow
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy_lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+      - name: Zip Lambda code
+        run: |
+          zip -r lambda.zip . -i lambda.py
+      - name: Upload Lambda code to S3
+        run: aws s3 cp ./lambda.zip s3://lambda-product-bucket/lambda.zip  
+      - name: Call Service Catalog to deploy Lambda
+        run: |
+          aws servicecatalog provision-product \
+          --product-id prod-bgtbkycy3r25y \
+          --provisioning-artifact-id pa-rykz6iy75awy2 \
+          --provisioned-product-name "LambdaDeployment"
+ 
+        
